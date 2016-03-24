@@ -1,7 +1,7 @@
 {-# OPTIONS_GHC -fwarn-unused-imports #-}
 module Lib
-    ( someFunc
-    ) where
+( someFunc
+) where
 
 import qualified  Data.Hourglass as H
 
