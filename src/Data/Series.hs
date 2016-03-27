@@ -5,6 +5,7 @@ Series, -- export Type only. The official constructor is `create`
 
 -- * Construction/Conversion
 create, createUnsafe,
+toTuples
 
 ) where
 
@@ -12,51 +13,56 @@ import qualified Data.Hourglass as H
 import qualified Data.Map       as M
 import qualified Data.List      as L
 
+--------------------------------------------------------------
+-- SeriesTime class
+--------------------------------------------------------------
+-- | SeriesTime class to identify which Hourglass time type is suitable for time-series
+--
+-- (Not all of them are, plus some functionalities are time-type specific)
+class (Ord t, Eq t) => SeriesTime t where
+    printSeriesTime :: H.TimeFormat frmt => frmt -> t -> String
 
+instance (H.Time t, Ord t, Eq t) => SeriesTime (H.LocalTime t) where
+    printSeriesTime = H.localTimePrint
+
+instance SeriesTime H.DateTime where
+    printSeriesTime = H.timePrint
 
 --------------------------------------------------------------
--- Type
+-- Series Type
 --------------------------------------------------------------
--- | Alias for LocalTime t::DateTime
-type LocalDateTime = H.LocalTime H.DateTime
-
 -- | Series data type
-data Series a = Series (M.Map LocalDateTime a) deriving(Eq)
-instance Show a => Show (Series a) where
+data Series t a = Series (M.Map t a) deriving(Eq)
+
+instance (SeriesTime t, Show a) => Show (Series t a) where
     show ts =
-      let
-        f :: LocalDateTime -> String
-        f = (H.timePrint H.ISO8601_DateAndTime) . (H.localTimeUnwrap::LocalDateTime->H.DateTime)
-        g :: Show a => (LocalDateTime, a) -> String
-        g (ldt,x) = (f ldt) ++ "," ++ (show x)
-      in
-        unlines $ L.map g $ toTuples ts
+        let
+            frmt = H.ISO8601_DateAndTime
+            f :: (SeriesTime t, Show a) => (t, a) -> String
+            f (ldt,x) = (printSeriesTime frmt ldt) ++ "," ++ (show x)
+        in
+            unlines $ L.map f $ toTuples ts
 
 --------------------------------------------------------------
 -- Construction/Conversion
 --------------------------------------------------------------
--- | Series construction
 create
-    :: [LocalDateTime] -- Times (:[LocalDateTime])
+    :: SeriesTime t
+    => [t] -- Times (:[LocalDateTime])
     -> [a]          -- Vals (:[a])
-    -> Series a
+    -> Series t a
 create xs ys = Series $ M.fromList $ zip xs ys
 
 createUnsafe
-    :: [LocalDateTime] -- ^ Times (:[LocalDateTime])
+    :: SeriesTime t
+    => [t] -- ^ Times (:[LocalDateTime])
     -> [a]          -- ^ Vals (:[a])
-    -> Series a
+    -> Series t a
 createUnsafe xs ys = Series $ M.fromAscList $ zip xs ys
 
 -- | Returns a list of 2-tuples from a Series a
 toTuples
-    :: Series a -- ^ Series (:Series a)
-    -> [(LocalDateTime, a)]
+    :: SeriesTime t
+    => Series t a -- ^ Series (:Series a)
+    -> [(t, a)]
 toTuples (Series m) = M.toAscList m
-
--- | Generates a Series a from a list of LocalDateTime and a mapping of these
-fromDates
-    :: [LocalDateTime]       -- ^ datetimes (:[LocalDateTime])
-    -> (LocalDateTime -> a)  -- ^ Map (:(LocalDateTime -> a))
-    -> Series a
-fromDates xs f = create xs $ L.map f xs
