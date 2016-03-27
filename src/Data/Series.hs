@@ -5,8 +5,10 @@ Series, -- export Type only. The official constructor is `create`
 
 -- * Construction/Conversion
 create, createUnsafe,
-toTuples
+toTuples,
 
+-- * Accessors
+values
 ) where
 
 import qualified Data.Hourglass as H
@@ -47,22 +49,31 @@ instance (SeriesTime t, Show a) => Show (Series t a) where
 -- Construction/Conversion
 --------------------------------------------------------------
 create
-    :: SeriesTime t
-    => [t] -- Times (:[LocalDateTime])
-    -> [a]          -- Vals (:[a])
+    :: SeriesTime t -- (Ord t, Eq t)
+    => [t]
+    -> [a]
     -> Series t a
 create xs ys = Series $ M.fromList $ zip xs ys
 
 createUnsafe
     :: SeriesTime t
-    => [t] -- ^ Times (:[LocalDateTime])
-    -> [a]          -- ^ Vals (:[a])
+    => [t]
+    -> [a]
     -> Series t a
 createUnsafe xs ys = Series $ M.fromAscList $ zip xs ys
 
 -- | Returns a list of 2-tuples from a Series a
 toTuples
     :: SeriesTime t
-    => Series t a -- ^ Series (:Series a)
+    => Series t a
     -> [(t, a)]
 toTuples (Series m) = M.toAscList m
+
+--------------------------------------------------------------
+-- Accessors
+--------------------------------------------------------------
+-- | Returns the values of Series a
+values
+    :: Series t a
+    -> [a]
+values (Series m)= M.elems m
