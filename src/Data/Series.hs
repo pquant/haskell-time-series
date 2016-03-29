@@ -16,19 +16,19 @@ import qualified Data.Map       as M
 import qualified Data.List      as L
 
 --------------------------------------------------------------
--- SeriesTime class
+-- TimeStamp class
 --------------------------------------------------------------
--- | SeriesTime class to identify which Hourglass time type is suitable for time-series
+-- | TimeStamp class to identify which Hourglass time type is suitable for time-series
 --
 -- (Not all of them are, plus some functionalities are time-type specific)
-class (Ord t, Eq t) => SeriesTime t where
-    printSeriesTime :: H.TimeFormat frmt => frmt -> t -> String
+class (Ord t, Eq t) => TimeStamp t where
+    printTimeStamp :: H.TimeFormat frmt => frmt -> t -> String
 
-instance (H.Time t, Ord t, Eq t) => SeriesTime (H.LocalTime t) where
-    printSeriesTime = H.localTimePrint
+instance (H.Time t, Ord t, Eq t) => TimeStamp (H.LocalTime t) where
+    printTimeStamp = H.localTimePrint
 
-instance SeriesTime H.DateTime where
-    printSeriesTime = H.timePrint
+instance TimeStamp H.DateTime where
+    printTimeStamp = H.timePrint
 
 --------------------------------------------------------------
 -- Series Type
@@ -36,12 +36,12 @@ instance SeriesTime H.DateTime where
 -- | Series data type
 data Series t a = Series (M.Map t a) deriving(Eq)
 
-instance (SeriesTime t, Show a) => Show (Series t a) where
+instance (TimeStamp t, Show a) => Show (Series t a) where
     show ts =
         let
             frmt = H.ISO8601_DateAndTime
-            f :: (SeriesTime t, Show a) => (t, a) -> String
-            f (ldt,x) = (printSeriesTime frmt ldt) ++ "," ++ (show x)
+            f :: (TimeStamp t, Show a) => (t, a) -> String
+            f (ldt,x) = (printTimeStamp frmt ldt) ++ "," ++ (show x)
         in
             unlines $ L.map f $ toTuples ts
 
@@ -49,14 +49,14 @@ instance (SeriesTime t, Show a) => Show (Series t a) where
 -- Construction/Conversion
 --------------------------------------------------------------
 create
-    :: SeriesTime t -- (Ord t, Eq t)
+    :: TimeStamp t -- (Ord t, Eq t)
     => [t]
     -> [a]
     -> Series t a
 create xs ys = Series $ M.fromList $ zip xs ys
 
 createUnsafe
-    :: SeriesTime t
+    :: TimeStamp t
     => [t]
     -> [a]
     -> Series t a
@@ -64,7 +64,7 @@ createUnsafe xs ys = Series $ M.fromAscList $ zip xs ys
 
 -- | Returns a list of 2-tuples from a Series a
 toTuples
-    :: SeriesTime t
+    :: TimeStamp t
     => Series t a
     -> [(t, a)]
 toTuples (Series m) = M.toAscList m
