@@ -1,3 +1,9 @@
-.stack-work/
-*~
-.idea/
+*
+!.gitignore
+!Series.hs
+!*.cabal
+!LICENCE
+!README.md
+!Setup.hs
+!stack.yaml
+!*/
