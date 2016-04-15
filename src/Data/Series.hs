@@ -64,9 +64,11 @@ instance (TimeStamp t, Show a) => Show (Series t a) where
 --------------------------------------------------------------
 -- Construction/Conversion
 --------------------------------------------------------------
--- | Safe construction which guarantees underlying Vector (t,a) to be ordered by t
+-- | Safe time-series construction which guarantees underlying Vector (timestamp,a) to be ordered by timestamp and each timestamp to be unique
 --
 -- Uses Data.List.sort (mergeSort) on t - should be O(nlogn) best/worst/average
+--
+-- Uniqueness of timestamps in fact requires timestamps not to be less than 1 second apart (TODO: make that nanosecs)
 create
     :: TimeStamp t -- (Ord t, Eq t)
     => [t]
@@ -95,6 +97,25 @@ createUnsafe
     -> Series t a
 createUnsafe ts xs = Series $ V.fromList $ zip ts xs
 
+-- | Generates time-series from an unordered list of (timestamp, value) tuples
+fromTuples
+    :: TimeStamp t
+    => [(t,a)]
+    -> Series t a
+fromTuples = uncurry create . unzip
+
+
+-- | Generates time-series from an unordered list of timestamps
+fromTimeStamps
+    :: TimeStamp t
+    => [t]
+    -> (t -> a)
+    -> Series t a
+fromTimeStamps ts f = create ts $ L.map f ts
+
+----------------------------------------------------------------
+-- Conversion
+----------------------------------------------------------------
 -- | Returns a list of 2-tuples from a Series a
 toTuples
     :: TimeStamp t
