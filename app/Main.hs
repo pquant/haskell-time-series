@@ -20,7 +20,7 @@ main = do
     print "diffP:" >> print diffP
     print "-----------------------------------"
 ----------------------------------------------------------
--- Play with time-series creation
+-- Play with time-series creation and accessors
 ----------------------------------------------------------
     let ns = [1 ..10]
         tod = H.TimeOfDay 19 40 0 0
@@ -33,6 +33,7 @@ main = do
     print ts0
     print ts1
     print ts2
+    print "(!) operator:" >> print (ts2 S.! (head ldts))
     print "-----------------------------------"
 ----------------------------------------------------------
 -- More Play with timeDiffs
