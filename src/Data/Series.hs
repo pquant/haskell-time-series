@@ -64,7 +64,7 @@ instance (TimeStamp t, Show a) => Show (Series t a) where
         let
             frmt = H.ISO8601_DateAndTime
             f :: (TimeStamp t, Show a) => (t, a) -> String
-            f (ldt,x) = (printTimeStamp frmt ldt) ++ "," ++ (show x)
+            f (ldt,x) = printTimeStamp frmt ldt ++ "," ++ show x
         in
             unlines $ L.map f $ toTuples ts
 
@@ -90,7 +90,7 @@ create ts xs = Series $ M.fromAscList $ L.sortBy (compareFun `on` fst) $ zip ts 
                 errMsg =    "\nSafe time-series constructions currently requires TimeStamps not to be less than 1 second apart, " ++
                             "otherwise TimeStamps are considered equal, which cannot happen in time-series.\n" ++
                             "The following time-stamps do not satisfy this criterion:\n" ++
-                            (printTimeStamp H.ISO8601_DateAndTime ti) ++ " and " ++ (printTimeStamp H.ISO8601_DateAndTime tj) ++
+                            printTimeStamp H.ISO8601_DateAndTime ti ++ " and " ++ printTimeStamp H.ISO8601_DateAndTime tj ++
                             " have a time difference (in seconds) of " ++ show diffSecs
 
 
